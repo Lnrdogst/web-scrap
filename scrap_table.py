@@ -28,7 +28,7 @@ def lambda_handler(event, context):
         "where": "1=1",
         "outFields": "*",
         "orderByFields": "fecha DESC",
-        "resultRecordCount": 10,
+        "resultRecordCount": 30,
         "f": "json"
     }
 
