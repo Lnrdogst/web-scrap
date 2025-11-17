@@ -1,0 +1,46 @@
+org: leonardogst
+service: api-web-scraping
+
+provider:
+  name: aws
+  runtime: python3.12
+  region: us-east-1
+  memorySize: 1024
+  timeout: 30
+  iam:
+    role: arn:aws:iam::218146371823:role/LabRole
+  environment:
+    DYNAMODB_TABLE: SismosIGP
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer: true
+
+functions:
+  scrape_sismos:
+    handler: scrap_table.lambda_handler
+    layers:
+      - Ref: PythonRequirementsLambdaLayer
+    events:
+      - http:
+          path: /sismos
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    SismosIGPTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: SismosIGP
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
