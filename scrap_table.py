@@ -6,6 +6,13 @@ import os
 from datetime import datetime
 from decimal import Decimal
 
+# Helper para serializar Decimal a JSON
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
 def lambda_handler(event, context):
     # API real donde están los datos
     api_url = "https://ide.igp.gob.pe/arcgis/rest/services/monitoreocensis/SismosReportados/MapServer/0/query"
@@ -36,8 +43,8 @@ def lambda_handler(event, context):
         table_name = os.environ.get('DYNAMODB_TABLE', 'SismosIGP')
         table = dynamodb.Table(table_name)
 
-        # Limpiar tabla
-        scan = table.scan()
+        # Limpiar tabla (con límite para evitar timeout)
+        scan = table.scan(Limit=100)
         with table.batch_writer() as batch:
             for item in scan.get("Items", []):
                 batch.delete_item(Key={'id': item['id']})
@@ -69,9 +76,19 @@ def lambda_handler(event, context):
             'body': json.dumps({
                 "message": f"Se almacenaron {len(inserted)} sismos",
                 "sismos": inserted
-            }, ensure_ascii=False)
+            }, ensure_ascii=False, cls=DecimalEncoder)
         }
 
+    except requests.exceptions.Timeout:
+        return {
+            'statusCode': 504,
+            'body': json.dumps({"error": "Timeout al consultar API IGP"})
+        }
+    except requests.exceptions.RequestException as e:
+        return {
+            'statusCode': 502,
+            'body': json.dumps({"error": f"Error en API externa: {str(e)}"})
+        }
     except Exception as e:
         return {
             'statusCode': 500,
