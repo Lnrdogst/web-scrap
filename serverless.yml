@@ -12,19 +12,9 @@ provider:
   environment:
     DYNAMODB_TABLE: SismosIGP
 
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    dockerizePip: true
-    layer: true
-
 functions:
   scrape_sismos:
     handler: scrap_table.lambda_handler
-    layers:
-      - Ref: PythonRequirementsLambdaLayer
     events:
       - http:
           path: /sismos

@@ -4,6 +4,7 @@ import boto3
 import uuid
 import os
 from datetime import datetime
+from decimal import Decimal
 
 def lambda_handler(event, context):
     # API real donde están los datos
@@ -52,10 +53,10 @@ def lambda_handler(event, context):
                 "timestamp_scraping": datetime.utcnow().isoformat(),
                 "fecha": attrs.get("fecha"),
                 "hora": attrs.get("hora"),
-                "lat": attrs.get("lat"),
-                "lon": attrs.get("lon"),
-                "magnitud": attrs.get("magnitud"),
-                "profundidad": attrs.get("profundidad"),
+                "lat": Decimal(str(attrs.get("lat"))) if attrs.get("lat") is not None else None,
+                "lon": Decimal(str(attrs.get("lon"))) if attrs.get("lon") is not None else None,
+                "magnitud": Decimal(str(attrs.get("magnitud"))) if attrs.get("magnitud") is not None else None,
+                "profundidad": Decimal(str(attrs.get("profundidad"))) if attrs.get("profundidad") is not None else None,
                 "departamento": attrs.get("departamento"),
                 "ref": attrs.get("ref"),
             }
